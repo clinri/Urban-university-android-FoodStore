@@ -1,6 +1,7 @@
 package ru.borisov.foodstore
 
 import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +25,7 @@ class FoodListAdapter(
         val foodNameTV = view?.findViewById<TextView>(R.id.foodNameTV)
         val foodPriceTV = view?.findViewById<TextView>(R.id.foodPriceTV)
         getItem(position)?.apply {
-            image?.let { foodImageIV?.setImageBitmap(it) }
+            image?.let { foodImageIV?.setImageURI(Uri.parse(it)) }
                 ?: run { foodImageIV?.setImageResource(R.drawable.ic_empty_image_24) }
             foodNameTV?.text = name
             foodPriceTV?.text = price.toString()

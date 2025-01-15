@@ -40,6 +40,12 @@
                 android:hint="@string/hint_enter_name" />
 
             <EditText
+                android:id="@+id/foodDescriptionET"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_enter_description" />
+
+            <EditText
                 android:id="@+id/foodPriceET"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
