@@ -4,7 +4,11 @@
     <string name="create_store">Создать магазин</string>
     <string name="add">Добавить</string>
     <string name="hint_enter_name">Введите наименование продукта</string>
+    <string name="hint_enter_description">Введите краткое описание</string>
     <string name="hint_enter_price">Введите цену</string>
     <string name="text_exit">Выход</string>
     <string name="image_food">Изображение продукта</string>
+    <string name="name_food">Имя товара:</string>
+    <string name="food_description">Краткое описание товара:</string>
+    <string name="food_price">Цена товара:</string>
 </resources>
