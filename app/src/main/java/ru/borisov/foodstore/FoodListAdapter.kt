@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import java.util.Locale
 
 class FoodListAdapter(
     context: Context,
@@ -28,7 +29,7 @@ class FoodListAdapter(
             image?.let { foodImageIV?.setImageURI(Uri.parse(it)) }
                 ?: run { foodImageIV?.setImageResource(R.drawable.ic_empty_image_24) }
             foodNameTV?.text = name
-            foodPriceTV?.text = price.toString()
+            foodPriceTV?.text = String.format(Locale.getDefault(), "%d", price)
         }
         return view
     }
