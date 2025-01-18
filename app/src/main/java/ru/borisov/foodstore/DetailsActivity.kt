@@ -2,53 +2,78 @@ package ru.borisov.foodstore
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
+import java.util.Locale
 
-class DetailsActivity : AppCompatActivity() {
-    lateinit var toolbar: Toolbar
-    lateinit var foodImageIV: ImageView
+class DetailsActivity : CustomActivity() {
+
     lateinit var foodNameTV: TextView
     lateinit var foodPriceTV: TextView
     lateinit var foodDescriptionTV: TextView
+    private var foodItem: FoodItem? = null
+    private var position = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_details)
-        val foodItem = intent.parcelable<FoodItem>(FoodItem::class.java.simpleName)
+        intent.parcelableArrayList<FoodItem>(FOOD_ITEM_LIST_KEY)?.let {
+            foodItemList.addAll(it)
+        }
+        position = intent.getIntExtra(POSITION_KEY, 0)
+        foodItem = foodItemList[position]
+        initVariables()
+        setSupportActionBar(toolbar)
+        foodItem?.apply {
+            image?.let {
+                photoUri = Uri.parse(image)
+                foodImageIV.setImageURI(photoUri)
+            }
+            foodNameTV.text = name
+            foodDescriptionTV.text = description ?: ""
+            foodPriceTV.text = String.format(Locale.getDefault(), "%d", price)
+        }
+        foodImageIV.setOnClickListener { startGetImageIntent() }
+    }
+
+    private fun initVariables() {
         toolbar = findViewById(R.id.toolbar)
         foodImageIV = findViewById(R.id.foodImageIV)
         foodNameTV = findViewById(R.id.foodNameTV)
         foodPriceTV = findViewById(R.id.foodPriceTV)
         foodDescriptionTV = findViewById(R.id.foodDescriptionTV)
-        setSupportActionBar(toolbar)
-        foodItem?.apply {
-            image?.let { foodImageIV.setImageURI(Uri.parse(it)) }
-            foodNameTV.text = name
-            foodDescriptionTV.text = description ?: ""
-            foodPriceTV.text = price.toString()
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
+        menuInflater.inflate(R.menu.toolbar_menu_details_activity, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.exit) finishAffinity()
+        when (item.itemId) {
+            R.id.exit -> {
+                showToastFinishProgram()
+                finish()
+            }
+
+            R.id.back -> {
+                changeList()
+                val intent = Intent(this, StoreActivity::class.java).apply {
+                    putParcelableArrayListExtra(FOOD_ITEM_LIST_KEY, foodItemList)
+                    putExtra(HAS_INTENT_FROM_DETAILS_ACTIVITY_KEY, true)
+                }
+                startActivity(intent)
+                finish()
+            }
+        }
         return super.onOptionsItemSelected(item)
     }
 
-    inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
-        SDK_INT >= 33 -> getParcelableExtra(key, T::class.java)
-        else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
+    private fun changeList() {
+        val changedFoodItem = foodItem?.copy(image = photoUri.toString()) ?: FoodItem()
+        foodItemList.add(position + 1, changedFoodItem)
+        foodItemList.removeAt(position)
     }
 }

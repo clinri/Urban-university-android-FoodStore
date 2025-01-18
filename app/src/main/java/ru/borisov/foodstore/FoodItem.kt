@@ -3,11 +3,11 @@ package ru.borisov.foodstore
 import android.os.Parcel
 import android.os.Parcelable
 
-class FoodItem(
-    val name: String,
-    val price: Int,
-    val image: String?,
-    val description: String?,
+data class FoodItem(
+    val name: String = "",
+    val price: Int = 0,
+    val image: String? = null,
+    val description: String? = null,
 ): Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",

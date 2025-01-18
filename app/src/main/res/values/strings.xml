@@ -11,4 +11,6 @@
     <string name="name_food">Имя товара:</string>
     <string name="food_description">Краткое описание товара:</string>
     <string name="food_price">Цена товара:</string>
+    <string name="text_back">Назад</string>
+    <string name="finish_program">Программа завершена</string>
 </resources>

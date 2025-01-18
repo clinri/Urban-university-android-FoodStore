@@ -1,82 +1,84 @@
 package ru.borisov.foodstore
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.AdapterView
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.ListView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.ViewModelProvider
 
-class StoreActivity : AppCompatActivity() {
+class StoreActivity : CustomActivity() {
 
-    private val GALLERY_REQUEST_CODE = 302
-    lateinit var toolbar: Toolbar
-    lateinit var foodImageIV: ImageView
-    lateinit var foodNameET: EditText
-    lateinit var foodDescriptionET: EditText
-    lateinit var foodPriceET: EditText
-    lateinit var addFoodItemBTN: Button
-    lateinit var foodItemListLV: ListView
-    private val foodItemList: MutableList<FoodItem> = mutableListOf()
-    lateinit var storeViewModel: StoreViewModel
-    private var photoUri: Uri? = null
+    private lateinit var foodNameET: EditText
+    private lateinit var foodDescriptionET: EditText
+    private lateinit var foodPriceET: EditText
+    private lateinit var addFoodItemBTN: Button
+    private lateinit var foodItemListLV: ListView
+    private val adapter: FoodListAdapter by lazy { FoodListAdapter(this, foodItemList) }
+    private var hasIntentFromDetailsActivity: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_store)
-        storeViewModel = ViewModelProvider(this)[StoreViewModel::class.java]
         initVariables()
         setSupportActionBar(toolbar)
-        val adapter = FoodListAdapter(this, foodItemList)
-        foodItemListLV.adapter = adapter
-        foodItemListLV.onItemClickListener =
-            AdapterView.OnItemClickListener { _, _, position, _ ->
-                val foodItem = adapter.getItem(position)
-                startActivity(Intent(this, DetailsActivity::class.java).apply {
-                    putExtra(FoodItem::class.java.simpleName, foodItem)
-                })
-            }
-        storeViewModel.foodItemList.observe(this) { list ->
-            list?.let {
-                foodItemList.clear()
+        hasIntentFromDetailsActivity = intent.getBooleanExtra(HAS_INTENT_FROM_DETAILS_ACTIVITY_KEY, false)
+        if (hasIntentFromDetailsActivity) {
+            intent.parcelableArrayList<FoodItem>(FOOD_ITEM_LIST_KEY)?.let {
                 foodItemList.addAll(it)
-                adapter.notifyDataSetChanged()
             }
         }
+        foodItemListLV.adapter = adapter
+        foodItemListLV.onItemClickListener = onItemClickListener()
         foodImageIV.setOnClickListener { startGetImageIntent() }
         addFoodItemBTN.setOnClickListener { onAddClick() }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.toolbar_menu_store_activity, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.exit) {
+            showToastFinishProgram()
+            finish()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun onItemClickListener(): AdapterView.OnItemClickListener =
+        AdapterView.OnItemClickListener { _, _, position, _ ->
+            startActivity(Intent(this, DetailsActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                putParcelableArrayListExtra(FOOD_ITEM_LIST_KEY, foodItemList)
+                putExtra(POSITION_KEY, position)
+            })
+        }
+
     private fun onAddClick() {
         if (foodNameET.text.isNotEmpty() && foodPriceET.text.isNotEmpty()) {
-            val foodItem = FoodItem(
-                name = foodNameET.text.toString(),
-                price = foodPriceET.text.toString().toInt(),
-                description = if (foodDescriptionET.text.isNotEmpty()) foodDescriptionET.text.toString() else null,
-                image = photoUri?.toString()
-            )
-            val list = storeViewModel.foodItemList.value?.toMutableList() ?: mutableListOf()
-            list.add(foodItem)
-            storeViewModel.foodItemList.value = list
-            foodNameET.text.clear()
-            foodDescriptionET.text.clear()
-            foodPriceET.text.clear()
-            photoUri = null
-            foodImageIV.setImageResource(R.drawable.ic_add_image_24)
+            foodItemList.add(createFoodItem())
+            clearEditField()
+            adapter.notifyDataSetChanged()
         }
     }
 
-    private fun startGetImageIntent() {
-        val photoPickerIntent = Intent(Intent.ACTION_PICK)
-        photoPickerIntent.type = "image/*"
-        startActivityForResult(photoPickerIntent, GALLERY_REQUEST_CODE)
+    private fun createFoodItem(): FoodItem = FoodItem(
+        name = foodNameET.text.toString(),
+        price = foodPriceET.text.toString().toInt(),
+        description = if (foodDescriptionET.text.isNotEmpty()) foodDescriptionET.text.toString() else null,
+        image = photoUri?.toString()
+    )
+
+    private fun clearEditField() {
+        foodNameET.text.clear()
+        foodDescriptionET.text.clear()
+        foodPriceET.text.clear()
+        foodImageIV.setImageResource(R.drawable.ic_add_image_24)
+        photoUri = null
     }
 
     private fun initVariables() {
@@ -87,25 +89,5 @@ class StoreActivity : AppCompatActivity() {
         foodPriceET = findViewById(R.id.foodPriceET)
         addFoodItemBTN = findViewById(R.id.addFoodItemBTN)
         foodItemListLV = findViewById(R.id.foodItemListLV)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            GALLERY_REQUEST_CODE -> if (resultCode == RESULT_OK) {
-                photoUri = data?.data
-                foodImageIV.setImageURI(photoUri)
-            }
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.exit) finish()
-        return super.onOptionsItemSelected(item)
     }
 }
